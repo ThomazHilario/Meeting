@@ -1,28 +1,101 @@
+// React
 import { useState } from 'react';
 
-// import router
+// Router
 import { Link } from 'expo-router'
 
-// import react native
+// React native
 import { View, Text, TextInput ,StyleSheet, Button, Image } from 'react-native'
 
 // import expo document picker
 import * as DocumentPicker from 'expo-document-picker';
 
+// Picker
+import {Picker} from '@react-native-picker/picker'
+
+// React Hook Form
+import { useForm, Controller } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+// firebase
+import { db } from '../services/firebase'
+import { updateDoc, doc, setDoc } from 'firebase/firestore';
+
+
+// messageError
+const messageError = 'Preencha este campo!'
+
+// interfaceSchemaProps
+interface SchemaProps{
+    nome:string,
+    endereco:string,
+    contato:string,
+    categoria:string
+}
+
+// schema
+const schema = z.object({
+    nome:z.string().min(1, messageError),
+    endereco:z.string().min(1, messageError),
+    contato:z.string().min(1, messageError),
+    categoria:z.string()
+}).required({
+    nome:true,
+    endereco:true,
+    contato:true,
+    categoria:true,
+})
 
 export default function HomeScreen(){
 
+    // Desestruturando useForm
+    const { handleSubmit, control, formState:{errors} } = useForm<SchemaProps>({resolver:zodResolver(schema), defaultValues:{
+        nome:'',
+        endereco:'',
+        contato:'',
+        categoria:'Monopolista'
+    }})
+
+    // state image
     const [image, setImage] = useState<null | string>(null)
 
+    // HandleImage
     async function handleImage(){
         try {
+            // Buscando documento
             const res = await DocumentPicker.getDocumentAsync()
 
+            // Variavel que aarmazena a parte de files
             const files = res.assets as DocumentPicker.DocumentPickerAsset[]
 
+            // Salvando a url na state image
             setImage(files[0].uri)
         } catch (error) {
             console.log(error)          
+        }
+    }
+
+    // registrarFornecedor
+    async function registrarFornecedor(data:SchemaProps){
+        try {
+            const novofornecedor = {
+                id:crypto.randomUUID(),
+                imagem:image,
+                nome:data.nome,
+                endereco:data.endereco,
+                contato:data.contato,
+                categoria:data.categoria
+            }
+    
+            // docRef
+            const docRef = doc(db, 'Fornecedores', novofornecedor.id)
+
+            // Adicionar ao banco de dados o novo fornecedor
+            await setDoc(docRef, novofornecedor)
+
+        } catch (error) {
+            console.log(error)
         }
     }
 
@@ -33,41 +106,91 @@ export default function HomeScreen(){
             <View style={style.form}>
                 <View style={style.labelmage}>
                     <Text style={{alignSelf:'flex-start'}}>Foto de perfil:</Text>
+    
                     {image !== null ? (
                         <Image source={{uri:image}} style={style.image}/>
                     ) : (
                         <Button title='Upload image' onPress={handleImage}/>
-                    )}
+                    )}                
                 </View>
 
                 <View style={style.label}>
                     <Text>Nome:</Text>
                     
-                    <TextInput style={style.inputForm} placeholder='Nome do fornecedor'/>
+                    <Controller
+                        name='nome'
+                        control={control}
+                        render={({field:{value, onChange}}) => (
+                            <TextInput 
+                                style={[style.inputForm, {borderColor: errors.nome && 'red'}]} 
+                                placeholder='Nome do fornecedor'
+                                onChangeText={onChange}
+                                value={value}
+                            />
+                        )}
+                    />
                 </View>
 
                 <View style={style.label}>
                     <Text>Endereço:</Text>
 
-                    <TextInput style={style.inputForm} placeholder='Endereco do fornecedor'/>
+                    <Controller
+                        name='endereco'
+                        control={control}
+                        render={({field:{value, onChange}}) => (
+                            <TextInput 
+                                style={[style.inputForm,{borderColor: errors.endereco && 'red'}]} 
+                                placeholder='Endereco do fornecedor'
+                                onChangeText={onChange}
+                                value={value}
+                            />
+                        )}
+                    />
                 </View>
 
                 <View style={style.label}>
                     <Text>Contato:</Text>
 
-                    <TextInput style={style.inputForm} placeholder='Ex:(ddd)98888-8888' />
+                    <Controller
+                        name='contato'
+                        control={control}
+                        render={({field:{value, onChange}}) => (
+                            <TextInput 
+                                style={[style.inputForm, {borderColor: errors.contato && 'red'}]} 
+                                placeholder='Ex:(ddd)98888-8888'
+                                onChangeText={onChange}
+                                value={value} 
+                            />
+                        )}
+                    />
                 </View>
                 
                 <View style={style.label}>
                     <Text>Categorias de produtos:</Text>
 
-                    <TextInput style={style.inputForm}/>
+                    <Controller
+                        name='categoria'
+                        control={control}
+                        render={({field:{value, onChange}}) => (
+                            <Picker selectedValue={value} 
+                                style={{padding:10, borderRadius:3}}
+                                onValueChange={onChange}
+                            >
+                                <Picker.Item label='Monopolista' value='Monopolista'/>
+                                <Picker.Item label='Habitual' value='Habitual'/>
+                                <Picker.Item label='Especial' value='Especial'/>
+                            </Picker>
+                        )}
+                    />
                 </View>
 
-                <Button title='Cadastrar fornecedor'/>
+                <Button 
+                    title='Cadastrar fornecedor'
+                    onPress={handleSubmit(registrarFornecedor)}
+                />
             </View>
 
-            <Link href='/fornecedores'>Fornecedores</Link>
+            <Link href='/fornecedores' style={style.link}>Lista de Fornecedores</Link>
         </View>
     )
 }
@@ -80,6 +203,7 @@ const style = StyleSheet.create({
     },
 
     title:{
+        marginTop:30,
         fontSize:25
     },
 
@@ -109,5 +233,15 @@ const style = StyleSheet.create({
         borderStyle:'solid',
         borderWidth:1,
         borderRadius:3
+    },
+
+    link:{
+        backgroundColor:'rgb(36, 36, 36)',
+        color:'white',
+        width:'85%',
+        padding:10,
+        borderRadius:3,
+        textAlign:'center',
+        fontWeight:'bold'
     }
 })
