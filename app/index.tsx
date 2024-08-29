@@ -51,15 +51,15 @@ const schema = z.object({
 export default function HomeScreen(){
 
     // Desestruturando useForm
-    const { handleSubmit, control, formState:{errors} } = useForm<SchemaProps>({resolver:zodResolver(schema), defaultValues:{
+    const { handleSubmit, control, formState:{errors}, reset } = useForm<SchemaProps>({resolver:zodResolver(schema), defaultValues:{
         nome:'',
         endereco:'',
         contato:'',
         categoria:'Monopolista'
     }})
 
-    // state image
-    const [files, setFiles] = useState<unknown | null>(null)
+    // blobFile
+    const [blobFile, setBlobFile] = useState<Blob | null>(null)
 
     // image 
     const [image, setImage] = useState<string | null>(null)
@@ -74,13 +74,18 @@ export default function HomeScreen(){
                 // Variavel que armazena a parte de files
                 const files = res.assets as DocumentPicker.DocumentPickerAsset[]
 
-                // Salvando a url na state de url
-                setImage(files[0].uri)
+                // URI
+                const uri = files[0].uri
 
                 // Salvando Blob do files na state files
-                const response = await fetch(files[0].uri)
+                const response = await fetch(uri)
                 const blob = await response.blob()
-                setFiles(blob)
+
+                // Salvando a uri na state de image
+                setImage(uri)
+
+                // setando o blob da imagem na state blobFile
+                setBlobFile(blob)
             }
 
         } catch (error) {
@@ -97,17 +102,14 @@ export default function HomeScreen(){
 
             const url = await getDownloadURL(storageRef)
             
-            setFiles(url)
+            return url
         } catch (error) {
             console.log(error)
         }
     }
 
-    async function registrarNoFirebase(id:string, novofornecedor:unknown){
+    async function registrarNoFirebase(docRef:any, novofornecedor:unknown){
         try {
-            // docRef
-            const docRef = doc(db, 'Fornecedores', id)
-
             // Adicionar ao banco de dados o novo fornecedor
             await setDoc(docRef, novofornecedor)
         } catch (error) {
@@ -127,28 +129,42 @@ export default function HomeScreen(){
                 categoria:data.categoria
             }
 
+            // Referencia ao banco dados
+            const docRef = doc(db, 'Fornecedores', novofornecedor.id)
+
             if(novofornecedor.imagem !== null){
 
                 // Caso files tenhaa um Blob
-                if(files){
-                    // Criar aa imaagem no firebase
-                    uploadImageInStorage(novofornecedor.id, files as Blob)
-
-                    // Registrara dados no firebase
-                    registrarNoFirebase(novofornecedor.id, novofornecedor)            
+                if(blobFile !== null){
+                    // Registrar dados no firebase
+                    registrarNoFirebase(docRef, novofornecedor)            
                     
+                    // Criar aa imagem no firebase
+                    const urlImage = await uploadImageInStorage(novofornecedor.id, blobFile as Blob)
+
+                    // Salvando url da imagem no banco de dados do fornecedor
+                    await updateDoc(docRef, {
+                        "imagem":urlImage
+                    })
                 }
 
             } else{
                 alert('insira uma imagem')
                 return
             }
-            
-            const docRef = doc(db, 'Fornecedores', novofornecedor.id)
-    
-            await updateDoc(docRef, {
-                "imagem":files as string
+
+            // Resetando as states blobFiles e image
+            setImage(null)
+            setBlobFile(null)
+
+
+            // Resetando campos do formulario
+            reset({
+                contato:'',
+                endereco:'',
+                nome:''
             })
+
 
         } catch (error) {
             console.log(error)
