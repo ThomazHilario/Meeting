@@ -2,7 +2,10 @@
 import { useEffect, useState } from 'react'
 
 // React native
-import { View, Text } from 'react-native'
+import { View, Text, StyleSheet, TextInput, FlatList } from 'react-native'
+
+// Picker
+import { Picker } from '@react-native-picker/picker'
 
 // Firebase
 import { db } from '@/services/firebase'
@@ -52,8 +55,71 @@ export default function Fornecedores(){
     const [fornecedores, setFornecedores] = useState<FornecedorProps[]>()
 
     return(
-        <View>
-            <Text>Hello</Text>
+        <View style={style.container}>
+            <View style={style.seach}>
+                <TextInput style={style.seachInput}/>
+
+                <Picker style={style.seachPicker}>
+                    <Picker.Item label='Monopolistas' value='monopolistas'/>
+                    <Picker.Item label='Habituais' value='habituais'/>
+                    <Picker.Item label='Especiais' value='especiais'/>
+                </Picker>
+            </View>
+
+            <View style={style.listContainer}>
+                <FlatList
+                    data={fornecedores}
+                    renderItem={(item) => (
+                        <View style={style.fornecedorStyle}>
+                            {item.item.nome}
+                        </View>
+                    )}
+                />
+            </View>
         </View>
     )
 }
+
+const style = StyleSheet.create({
+    container:{
+        flex:1,
+        backgroundColor:'rgb(36, 36, 36)'
+    },
+
+    seach:{
+        flexDirection:'row',
+        marginTop:20,
+        padding:10,
+        gap:2
+    },
+
+    seachInput:{
+        padding:5,
+        flexGrow:2,
+        borderWidth:1,
+        borderColor:'white',
+        borderRadius:3,
+        color:'white',
+        
+    },
+
+    seachPicker:{
+        borderRadius:3
+    },
+
+    text:{
+        color:'rgb(255, 255, 255)'
+    },
+
+    listContainer:{
+        marginTop:10,
+        padding:7
+    },
+
+    fornecedorStyle:{
+        backgroundColor:'rgb(242, 234, 234)',
+        padding:10,
+        borderRadius:5,
+        margin:5
+    }
+})

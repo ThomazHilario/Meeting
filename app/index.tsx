@@ -11,7 +11,7 @@ import { View, Text, TextInput ,StyleSheet, Button, Image } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker';
 
 // Picker
-import {Picker} from '@react-native-picker/picker'
+import { Picker } from '@react-native-picker/picker'
 
 // React Hook Form
 import { useForm, Controller } from 'react-hook-form'
@@ -19,8 +19,9 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 // firebase
-import { db } from '../services/firebase'
-import { updateDoc, doc, setDoc } from 'firebase/firestore';
+import { db, storage } from '../services/firebase'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 
 
 // messageError
@@ -58,7 +59,10 @@ export default function HomeScreen(){
     }})
 
     // state image
-    const [image, setImage] = useState<null | string>(null)
+    const [files, setFiles] = useState<unknown | null>(null)
+
+    // image 
+    const [image, setImage] = useState<string | null>(null)
 
     // HandleImage
     async function handleImage(){
@@ -66,13 +70,48 @@ export default function HomeScreen(){
             // Buscando documento
             const res = await DocumentPicker.getDocumentAsync()
 
-            // Variavel que aarmazena a parte de files
-            const files = res.assets as DocumentPicker.DocumentPickerAsset[]
+            if(res){
+                // Variavel que armazena a parte de files
+                const files = res.assets as DocumentPicker.DocumentPickerAsset[]
 
-            // Salvando a url na state image
-            setImage(files[0].uri)
+                // Salvando a url na state de url
+                setImage(files[0].uri)
+
+                // Salvando Blob do files na state files
+                const response = await fetch(files[0].uri)
+                const blob = await response.blob()
+                setFiles(blob)
+            }
+
         } catch (error) {
             console.log(error)          
+        }
+    }
+
+    // uload image in storage
+    const uploadImageInStorage = async (id:string, file:Blob) => {
+        try {
+            const storageRef = ref(storage, `imagens/${id}`)
+
+            await uploadBytes(storageRef, file)
+
+            const url = await getDownloadURL(storageRef)
+            
+            setFiles(url)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    async function registrarNoFirebase(id:string, novofornecedor:unknown){
+        try {
+            // docRef
+            const docRef = doc(db, 'Fornecedores', id)
+
+            // Adicionar ao banco de dados o novo fornecedor
+            await setDoc(docRef, novofornecedor)
+        } catch (error) {
+            console.log(error)
         }
     }
 
@@ -87,12 +126,25 @@ export default function HomeScreen(){
                 contato:data.contato,
                 categoria:data.categoria
             }
-    
-            // docRef
-            const docRef = doc(db, 'Fornecedores', novofornecedor.id)
 
-            // Adicionar ao banco de dados o novo fornecedor
-            await setDoc(docRef, novofornecedor)
+            // Caso files tenhaa um Blob
+            if(files){
+                // Criar aa imaagem no firebase
+                uploadImageInStorage(novofornecedor.id, files as Blob)
+
+                // Registrara dados no firebase
+                registrarNoFirebase(novofornecedor.id, novofornecedor)            
+                
+            }
+            
+            
+            if(typeof files === 'string'){   
+                const docRef = doc(db, 'Fornecedores', novofornecedor.id)
+    
+                await updateDoc(docRef, {
+                    "imagem":files as string
+                })
+            }
 
         } catch (error) {
             console.log(error)
