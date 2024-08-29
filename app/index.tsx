@@ -127,24 +127,28 @@ export default function HomeScreen(){
                 categoria:data.categoria
             }
 
-            // Caso files tenhaa um Blob
-            if(files){
-                // Criar aa imaagem no firebase
-                uploadImageInStorage(novofornecedor.id, files as Blob)
+            if(novofornecedor.imagem !== null){
 
-                // Registrara dados no firebase
-                registrarNoFirebase(novofornecedor.id, novofornecedor)            
-                
+                // Caso files tenhaa um Blob
+                if(files){
+                    // Criar aa imaagem no firebase
+                    uploadImageInStorage(novofornecedor.id, files as Blob)
+
+                    // Registrara dados no firebase
+                    registrarNoFirebase(novofornecedor.id, novofornecedor)            
+                    
+                }
+
+            } else{
+                alert('insira uma imagem')
+                return
             }
             
-            
-            if(typeof files === 'string'){   
-                const docRef = doc(db, 'Fornecedores', novofornecedor.id)
+            const docRef = doc(db, 'Fornecedores', novofornecedor.id)
     
-                await updateDoc(docRef, {
-                    "imagem":files as string
-                })
-            }
+            await updateDoc(docRef, {
+                "imagem":files as string
+            })
 
         } catch (error) {
             console.log(error)
