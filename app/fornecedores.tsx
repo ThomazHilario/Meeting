@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react'
 // React native
 import { View, Text, StyleSheet, TextInput, Image, FlatList, Modal, Pressable } from 'react-native'
 
+// Router
+import { Link } from 'expo-router'
+
+// Vector-icons
 import { Ionicons } from '@expo/vector-icons'
 
 // Picker
@@ -73,6 +77,12 @@ export default function Fornecedores(){
 
     return(
         <View style={style.container}>
+
+            {/* Link para voltar a rota inicial */}
+            <Link style={{alignSelf:'flex-start'}} href='/'>
+                <Ionicons name='arrow-back' color='white' size={32}/>
+            </Link>
+
             <View style={style.seach}>
                 <TextInput style={style.seachInput} value={seach} onChangeText={(value) => setSeach(value)}/>
 
@@ -132,13 +142,14 @@ export default function Fornecedores(){
 const style = StyleSheet.create({
     container:{
         flex:1,
-        backgroundColor:'rgb(36, 36, 36)'
+        backgroundColor:'rgb(36, 36, 36)',
+        padding:10
     },
 
     seach:{
+        marginTop:5,
         flexDirection:'row',
-        marginTop:20,
-        padding:10,
+        padding:6,
         gap:2
     },
 
@@ -170,7 +181,6 @@ const style = StyleSheet.create({
 
     listContainer:{
         marginTop:10,
-        padding:7
     },
 
     fornecedorStyle:{
