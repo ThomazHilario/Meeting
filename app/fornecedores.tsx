@@ -59,16 +59,22 @@ export default function Fornecedores(){
 
     }, [])
 
+    // state - seach
+    const [seach, setSeach] = useState<string>('')
+
     // state - fornecedores
     const [fornecedores, setFornecedores] = useState<FornecedorProps[]>()
 
     // state - isVisible
     const [isVisible, setIsVisible] = useState<boolean>(false)
 
+    // state - filterFornecedores
+    const filterFornecedores = seach !== '' ? fornecedores?.filter(fornecedor => fornecedor.nome.toLowerCase().includes(seach.toLowerCase())) : fornecedores
+
     return(
         <View style={style.container}>
             <View style={style.seach}>
-                <TextInput style={style.seachInput}/>
+                <TextInput style={style.seachInput} value={seach} onChangeText={(value) => setSeach(value)}/>
 
                 <Picker style={style.seachPicker}>
                     <Picker.Item label='Monopolistas' value='monopolistas'/>
@@ -82,7 +88,7 @@ export default function Fornecedores(){
                     <Text style={style.title}>Buscando Fornecedores...</Text>
                 ):(
                     <FlatList
-                        data={fornecedores}
+                        data={filterFornecedores as FornecedorProps[]}
                         renderItem={(item) => (
                             <View style={style.fornecedorStyle}>
 
