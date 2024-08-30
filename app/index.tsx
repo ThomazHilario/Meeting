@@ -7,6 +7,9 @@ import { Link } from 'expo-router'
 // React native
 import { View, Text, TextInput ,StyleSheet, Button, Image } from 'react-native'
 
+// uuid
+import uuid from 'react-native-uuid'
+
 // import expo document picker
 import * as DocumentPicker from 'expo-document-picker';
 
@@ -121,7 +124,7 @@ export default function HomeScreen(){
     async function registrarFornecedor(data:SchemaProps){
         try {
             const novofornecedor = {
-                id:crypto.randomUUID(),
+                id:String(uuid.v4()),
                 imagem:image,
                 nome:data.nome,
                 endereco:data.endereco,

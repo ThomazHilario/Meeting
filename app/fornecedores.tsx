@@ -82,7 +82,21 @@ export default function Fornecedores(){
     const [isVisible, setIsVisible] = useState<boolean>(false)
 
     // state - filterFornecedores
-    const filterFornecedores = seach !== '' ? fornecedores?.filter(fornecedor => fornecedor.nome.toLowerCase().includes(seach.toLowerCase())) : fornecedores || selectValue !== 'default' ? fornecedores?.filter((fornecedor) => fornecedor.categoria.toLowerCase().includes(selectValue.toLowerCase())) : fornecedores
+    const filterFornecedores = () => {
+        if(seach !== '' && selectValue === 'default'){
+            return fornecedores?.filter(fornecedor => (
+                fornecedor.nome.toLowerCase().includes(seach.toLowerCase())
+            ))
+        } 
+
+        if(seach === '' && selectValue !== 'default' || seach !== '' && selectValue !== 'default'){
+            return fornecedores?.filter(fornecedor => (
+                fornecedor.categoria.toLowerCase().includes(selectValue.toLowerCase())
+            ))
+        }
+        return fornecedores
+        
+    }
 
     const showModalAndData = (fornecedor:FornecedorProps) => {
         setIsVisible(true)
@@ -114,7 +128,7 @@ export default function Fornecedores(){
                 ):(
                     <>
                         <FlatList
-                            data={filterFornecedores as FornecedorProps[]}
+                            data={filterFornecedores()}
                             renderItem={(item) => (
                                 <View style={style.fornecedorStyle}>
 

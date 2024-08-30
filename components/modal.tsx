@@ -40,8 +40,8 @@ const style = StyleSheet.create({
         backgroundColor:'rgb(50, 50, 50)',
         height:'50%',
         width:'90%',
-        transform:'translate(-50%, 30%)',
-        left:'50%',
+        top:'10%',
+        left:'5%',
         padding:20,
         borderRadius:10,
         gap:10
