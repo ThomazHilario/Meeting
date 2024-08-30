@@ -168,21 +168,22 @@ const style = StyleSheet.create({
         marginTop:5,
         flexDirection:'row',
         padding:6,
-        gap:2
+        gap:2,
     },
 
     seachInput:{
         padding:5,
-        flexGrow:2,
         borderWidth:1,
         borderColor:'white',
         borderRadius:3,
         color:'white',
-        
+        flexGrow:2
     },
 
     seachPicker:{
-        borderRadius:3
+        borderRadius:3,
+        backgroundColor:'white',
+        flexGrow:1
     },
 
     text:{
