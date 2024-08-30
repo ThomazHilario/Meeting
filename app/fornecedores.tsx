@@ -10,6 +10,9 @@ import { Link } from 'expo-router'
 // Vector-icons
 import { Ionicons } from '@expo/vector-icons'
 
+// Components
+import { FornecedorModal } from '@/components/modal'
+
 // Picker
 import { Picker } from '@react-native-picker/picker'
 
@@ -17,7 +20,7 @@ import { Picker } from '@react-native-picker/picker'
 import { db } from '@/services/firebase'
 import { getDocs, query, collection } from 'firebase/firestore'
 
-interface FornecedorProps{
+export interface FornecedorProps{
     id:string,
     imagem:null | string,
     nome:string,
@@ -66,14 +69,26 @@ export default function Fornecedores(){
     // state - seach
     const [seach, setSeach] = useState<string>('')
 
+    // state - selectValue
+    const [selectValue, setSelectValue] = useState<string>('default')
+
     // state - fornecedores
     const [fornecedores, setFornecedores] = useState<FornecedorProps[]>()
+
+    // state - fornecedorData
+    const [fornecedorData, setFornecedorData] = useState<FornecedorProps>()
 
     // state - isVisible
     const [isVisible, setIsVisible] = useState<boolean>(false)
 
     // state - filterFornecedores
-    const filterFornecedores = seach !== '' ? fornecedores?.filter(fornecedor => fornecedor.nome.toLowerCase().includes(seach.toLowerCase())) : fornecedores
+    const filterFornecedores = seach !== '' ? fornecedores?.filter(fornecedor => fornecedor.nome.toLowerCase().includes(seach.toLowerCase())) : fornecedores || selectValue !== 'default' ? fornecedores?.filter((fornecedor) => fornecedor.categoria.toLowerCase().includes(selectValue.toLowerCase())) : fornecedores
+
+    const showModalAndData = (fornecedor:FornecedorProps) => {
+        setIsVisible(true)
+
+        setFornecedorData(fornecedor)
+    }
 
     return(
         <View style={style.container}>
@@ -86,10 +101,10 @@ export default function Fornecedores(){
             <View style={style.seach}>
                 <TextInput style={style.seachInput} value={seach} onChangeText={(value) => setSeach(value)}/>
 
-                <Picker style={style.seachPicker}>
-                    <Picker.Item label='Monopolistas' value='monopolistas'/>
-                    <Picker.Item label='Habituais' value='habituais'/>
-                    <Picker.Item label='Especiais' value='especiais'/>
+                <Picker style={style.seachPicker} onValueChange={(value:string) => setSelectValue(value)}>
+                    <Picker.Item label='Monopolistas' value='Monopolista'/>
+                    <Picker.Item label='Habituais' value='Habitual'/>
+                    <Picker.Item label='Especiais' value='Especial'/>
                 </Picker>
             </View>
 
@@ -97,42 +112,31 @@ export default function Fornecedores(){
                 {isLoading ? (
                     <Text style={style.title}>Buscando Fornecedores...</Text>
                 ):(
-                    <FlatList
-                        data={filterFornecedores as FornecedorProps[]}
-                        renderItem={(item) => (
-                            <View style={style.fornecedorStyle}>
+                    <>
+                        <FlatList
+                            data={filterFornecedores as FornecedorProps[]}
+                            renderItem={(item) => (
+                                <View style={style.fornecedorStyle}>
 
-                                {/* Content */}
-                                <View style={style.fornecedorContent}>
-                                    <Image style={style.imagem} source={{uri:item.item.imagem as string}}/>
-                                    <Text>{item.item.nome}</Text>
-                                </View>
-
-                                {/* Button open modal */}
-                                <Pressable onPress={() => setIsVisible(true)}>
-                                    <Ionicons name='open' color='black' size={24}/>
-                                </Pressable>
-
-                                {/* Modal */}
-                                <Modal animationType='fade' transparent={true} visible={isVisible}>
-                                    <View style={style.overlay}>
-                                        <View style={style.modal}>
-                                            <Pressable style={{alignSelf:'flex-end'}} onPress={() => setIsVisible(false)}>
-                                                <Ionicons name='close' color='white' size={24}/>
-                                            </Pressable>
-
-                                            <Image style={style.imageModal} source={{uri:item.item.imagem as string}}/>
-
-                                            <Text style={style.text}>Nome: {item.item.nome}</Text>
-                                            <Text style={style.text}>Endereco: {item.item.endereco}</Text>
-                                            <Text style={style.text}>Contato: {item.item.contato}</Text>
-                                            <Text style={style.text}>Categoria: {item.item.categoria}</Text>
-                                        </View>
+                                    {/* Content */}
+                                    <View style={style.fornecedorContent}>
+                                        <Image style={style.imagem} source={{uri:item.item.imagem as string}}/>
+                                        <Text>{item.item.nome}</Text>
                                     </View>
-                                </Modal>
-                            </View>
+
+                                    {/* Button open modal */}
+                                    <Pressable onPress={() => showModalAndData(item.item)}>
+                                        <Ionicons name='open' color='black' size={24}/>
+                                    </Pressable>
+
+                                </View>
+                            )}  
+                        />
+                        
+                        {fornecedorData && (
+                            <FornecedorModal data={fornecedorData as FornecedorProps} isVisible={isVisible} setIsVisible={setIsVisible}/>
                         )}
-                    />
+                    </>    
                 )}
             </View>
         </View>
@@ -205,26 +209,4 @@ const style = StyleSheet.create({
         borderRadius:100
     },
 
-    modal:{
-        backgroundColor:'rgb(50, 50, 50)',
-        height:'50%',
-        width:'90%',
-        transform:'translate(-50%, 30%)',
-        left:'50%',
-        padding:20,
-        borderRadius:10,
-        gap:10
-    },
-
-    overlay:{
-        backgroundColor:'rgba(36, 36, 36, 0.4)',
-        height:'100%',
-    },
-
-    imageModal:{
-        height:100,
-        width:100,
-        borderRadius:100,
-        alignSelf:'center'
-    },
 })
