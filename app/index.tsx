@@ -1,6 +1,9 @@
 // React
 import { useState } from 'react';
 
+// Components
+import { ModalError } from '@/components/modalError';
+
 // Router
 import { Link } from 'expo-router'
 
@@ -60,6 +63,9 @@ export default function HomeScreen(){
         contato:'',
         categoria:'Monopolista'
     }})
+
+    // state - isVisible
+    const [isVisible, setIsVisible] = useState<boolean>(false)
 
     // blobFile
     const [blobFile, setBlobFile] = useState<Blob | null>(null)
@@ -152,7 +158,7 @@ export default function HomeScreen(){
                 }
 
             } else{
-                alert('insira uma imagem')
+                setIsVisible(true)
                 return
             }
 
@@ -263,6 +269,8 @@ export default function HomeScreen(){
                     title='Cadastrar fornecedor'
                     onPress={handleSubmit(registrarFornecedor)}
                 />
+
+                <ModalError isVisible={isVisible} setIsVisible={setIsVisible} />
             </View>
 
             <Link href='/fornecedores' style={style.link}>Lista de Fornecedores</Link>
