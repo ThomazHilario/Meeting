@@ -73,7 +73,7 @@ export default function Fornecedores(){
     const [selectValue, setSelectValue] = useState<string>('default')
 
     // state - fornecedores
-    const [fornecedores, setFornecedores] = useState<FornecedorProps[]>()
+    const [fornecedores, setFornecedores] = useState<FornecedorProps[]>([])
 
     // state - fornecedorData
     const [fornecedorData, setFornecedorData] = useState<FornecedorProps>()
@@ -81,7 +81,7 @@ export default function Fornecedores(){
     // state - isVisible
     const [isVisible, setIsVisible] = useState<boolean>(false)
 
-    // state - filterFornecedores
+    // filterFornecedores
     const filterFornecedores = () => {
         if(seach !== '' && selectValue === 'default'){
             return fornecedores?.filter(fornecedor => (
@@ -102,6 +102,11 @@ export default function Fornecedores(){
         setIsVisible(true)
 
         setFornecedorData(fornecedor)
+    }
+
+    // Exluir fornecedor
+    const deleteFornecedor = (id:string) => {
+        setFornecedores(fornecedores?.filter(fornecedor => fornecedor.id !== id))
     }
 
     return(
@@ -127,29 +132,33 @@ export default function Fornecedores(){
                     <Text style={style.title}>Buscando Fornecedores...</Text>
                 ):(
                     <>
-                        <FlatList
-                            data={filterFornecedores()}
-                            renderItem={(item) => (
-                                <View style={style.fornecedorStyle}>
+                        {fornecedores?.length > 0 ? (
+                            <>
+                                <FlatList
+                                data={filterFornecedores()}
+                                renderItem={(item) => (
+                                    <View style={style.fornecedorStyle}>
 
-                                    {/* Content */}
-                                    <View style={style.fornecedorContent}>
-                                        <Image style={style.imagem} source={{uri:item.item.imagem as string}}/>
-                                        <Text>{item.item.nome}</Text>
+                                        {/* Content */}
+                                        <View style={style.fornecedorContent}>
+                                            <Image style={style.imagem} source={{uri:item.item.imagem as string}}/>
+                                            <Text>{item.item.nome}</Text>
+                                        </View>
+
+                                        {/* Button open modal */}
+                                        <Pressable onPress={() => showModalAndData(item.item)}>
+                                            <Ionicons name='open' color='black' size={24}/>
+                                        </Pressable>
+
                                     </View>
-
-                                    {/* Button open modal */}
-                                    <Pressable onPress={() => showModalAndData(item.item)}>
-                                        <Ionicons name='open' color='black' size={24}/>
-                                    </Pressable>
-
-                                </View>
-                            )}  
-                        />
-                        
-                        {fornecedorData && (
-                            <FornecedorModal data={fornecedorData as FornecedorProps} isVisible={isVisible} setIsVisible={setIsVisible}/>
-                        )}
+                                )}  
+                                />
+                            
+                                {fornecedorData && (
+                                    <FornecedorModal data={fornecedorData as FornecedorProps} isVisible={isVisible} setIsVisible={setIsVisible} deleteFornecedor={deleteFornecedor}/>
+                                )}
+                            </>
+                        ) : <Text style={style.title}>Não há fornecedores</Text>}
                     </>    
                 )}
             </View>
